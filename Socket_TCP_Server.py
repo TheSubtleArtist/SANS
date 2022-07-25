@@ -1,13 +1,24 @@
 import socket
+import threading
 
-server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server_socket.bind(("0.0.0.0", 1337))
-server_socket.listen(10)
+addrIP = '0.0.0.0'
+port = 9998
 
-while True:
-        conn, addr = server_socket.accept()
-        conn.send(b"Do you want to play a game?\n")
-        received = conn.recv(1024)
-        print(received)
+def handle_client(client_socket):
+        with client_socket as sock:
+                request = sock.recv(1024)
+                print(f'[*] Received: {request.decode("utf-8")}')
+                sock.send(b'ACK')
+def main():
+        server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        server_socket.bind((addrIP, port))
+        server_socket.listen(5)
+        print(f'[*] Listening on {addrIP}:{port}')
+        while True:
+                client, address = server_socket.accept()
+                print(f'[*] Accepted connection from {address[0]}:{address[1]}')
+                client_handler = threading.Threat(target=handle_client, args=(client,))
+                client_handler.start()
 
-server_socket.close()
+if __name__ == '__main__':
+        main()
